@@ -52,7 +52,7 @@ const commands = [
                 .setRequired(true)),
     new SlashCommandBuilder()
         .setName('setchannel')
-        .setDescription('Set day for customs ping')
+        .setDescription('Set channel for customs ping to current channel')
 ];
 
 const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
