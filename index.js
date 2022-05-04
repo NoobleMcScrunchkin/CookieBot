@@ -109,7 +109,7 @@ client.on('interactionCreate', async interaction => {
 
     let owner = await interaction.guild.fetchOwner()
     if (interaction.member.id != owner.id) {
-        await interaction.reply({ content: 'Only the server owner can run commands', fetchReply: true })
+        await interaction.reply({ content: 'Only the server owner can run commands.', fetchReply: true })
         return;
     }
 
