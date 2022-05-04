@@ -107,6 +107,9 @@ client.on("guildCreate", async guild => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
+    let owner = await interaction.guild.fetchOwner()
+    if (interaction.member.id != owner.id) return;
+
     if (interaction.commandName === 'ping') {
         let res = await query(`select * from messages where guild_id = ${interaction.guild.id}`)
         let message = await interaction.reply({ content: res[0].message, fetchReply: true });
