@@ -140,7 +140,7 @@ client.on('interactionCreate', async interaction => {
 
 client.login(process.env.TOKEN);
 
-const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sundary'];
+const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'disable'];
 
 const job = schedule.scheduleJob('12 * * *', async () => {
     let schedule = await query(`select * from schedule where day = '${days[new Date().getDay()]}'`);
