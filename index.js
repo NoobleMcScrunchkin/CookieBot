@@ -108,7 +108,10 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     let owner = await interaction.guild.fetchOwner()
-    if (interaction.member.id != owner.id) return;
+    if (interaction.member.id != owner.id) {
+        await interaction.reply({ content: 'Only the server owner can run commands', fetchReply: true })
+        return;
+    }
 
     if (interaction.commandName === 'ping') {
         let res = await query(`select * from messages where guild_id = ${interaction.guild.id}`)
