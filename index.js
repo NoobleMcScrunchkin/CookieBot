@@ -92,7 +92,7 @@ client.on('ready', async () => {
     });
 });
 
-client.on("guildCreate", guild => {
+client.on("guildCreate", async guild => {
     console.log("Joined a new guild: " + guild.name);
     let res = await query(`select * from messages where guild_id = ${guild.id}`);
     if (res.length == 0) {
