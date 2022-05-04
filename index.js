@@ -92,6 +92,18 @@ client.on('ready', async () => {
     });
 });
 
+client.on("guildCreate", guild => {
+    console.log("Joined a new guild: " + guild.name);
+    let res = await query(`select * from messages where guild_id = ${guild.id}`);
+    if (res.length == 0) {
+        await query(`insert into messages (message, guild_id, reactions) values ("This is the default ping message, please set the message using the /setmessage command", ${guild.id}, "[]")`);
+    }
+    res = await query(`select * from schedule where guild_id = ${guild.id}`);
+    if (res.length == 0) {
+        await query(`insert into schedule (guild_id, day) values (${guild.id}, "Wednesday")`);
+    }
+})
+
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
