@@ -6,6 +6,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const mysql = require('mysql');
 const util = require('util');
 let intents = new Intents(Intents.NON_PRIVILEGED);
+intents.add('GUILDS');
+intents.add('GUILD_MEMBERS');
 const client = new Client({ intents });
 const schedule = require('node-schedule');
 const express = require('express');
