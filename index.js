@@ -184,7 +184,7 @@ const job = schedule.scheduleJob('12 * * *', async () => {
 app.post('/eval', async (req, res) => {
     const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
     try {
-        let output = await (new AsyncFunction(req.body.command))();
+        let output = await (new AsyncFunction(req.body.command)).bind(this)();
         res.json({
             success: true,
             output,
