@@ -156,7 +156,7 @@ client.login(process.env.TOKEN);
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'disable'];
 
-const job = schedule.scheduleJob('12 * * *', async () => {
+const job = schedule.scheduleJob('0 12 * * *', async () => {
     let schedule = await query(`select * from schedule where day = '${days[new Date().getDay()]}'`);
     if (schedule.length == 0) return;
     schedule.forEach(async row => {
