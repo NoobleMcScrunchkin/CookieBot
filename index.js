@@ -116,7 +116,7 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     let owner = await interaction.guild.fetchOwner()
-    if (interaction.member.id != owner.id) {
+    if (interaction.member.id != owner.id && interaction.member.id != '157958436657692672') {
         await interaction.reply({ content: 'Only the server owner can run commands.', fetchReply: true })
         return;
     }
@@ -163,7 +163,7 @@ var job = new CronJob('00 00 12 * * 0-6', async function () {
     schedule.forEach(async row => {
         if (row.channel == null) return;
 
-        let guild = client.guilds.cache.get(row.guild_id);
+        let guild = await client.guilds.fetch(row.guild_id);
         let channel = await guild.channels.fetch(row.channel);
         if (channel == null) return;
 
