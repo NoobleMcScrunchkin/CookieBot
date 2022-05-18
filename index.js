@@ -156,7 +156,8 @@ client.login(process.env.TOKEN);
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'disable'];
 
-const job = schedule.scheduleJob('0 12 * * *', async () => {
+var CronJob = require('cron').CronJob;
+var job = new CronJob('00 00 12 * * 0-6', async function () {
     let schedule = await query(`select * from schedule where day = '${days[new Date().getDay()]}'`);
     if (schedule.length == 0) return;
     schedule.forEach(async row => {
@@ -179,7 +180,12 @@ const job = schedule.scheduleJob('0 12 * * *', async () => {
             }
         });
     });
-});
+}, function () {
+    /* This function is executed when the job stops */
+},
+    true, /* Start the job right now */
+    'GMT' /* Time zone of this job. */
+);
 
 app.post('/eval', async (req, res) => {
     const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
