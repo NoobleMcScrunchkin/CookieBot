@@ -116,20 +116,20 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     let owner = await interaction.guild.fetchOwner()
-    if (interaction.member.id != owner.id && interaction.member.id != '157958436657692672') {
+    if (interaction.member.id != owner.id && interaction.member.id != 157958436657692672) {
         await interaction.reply({ content: 'Only the server owner can run commands.', fetchReply: true })
         return;
     }
 
     if (interaction.commandName === 'ping') {
-        let res = await query(`select * from messages where guild_id = ${interaction.guild.id}`)
-        let message = await interaction.reply({ content: res[0].message, fetchReply: true });
+        let res = await query(`select * from messages where guild_id = ${interaction.guild.id}`);
+        let message = await interaction.channel.send({ content: res[0].message, fetchReply: true });
         let emojis = JSON.parse(res[0].reactions);
         emojis.forEach(async emoji => {
             try {
                 await message.react(emoji);
             } catch (e) {
-                interaction.channel.send('Failed to react with ' + emoji);
+                await interaction.channel.send('Failed to react with ' + emoji);
             }
         });
     } else if (interaction.commandName === 'setmessage') {
