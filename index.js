@@ -254,6 +254,42 @@ app.get('/guilds', async (req, res) => {
     });
 });
 
+app.get('/guild', async (req, res) => {
+    if (!req.query.guildid) {
+        res.json({
+            success: false
+        });
+        return;
+    }
+
+    let guild = client.guilds.cache.find(guild => {
+        return req.query.guildid == guild.id
+    });
+
+    if (!guild) {
+        res.json({
+            success: false
+        });
+        return;
+    }
+
+    let members = await guild.members.fetch();
+    let channels = await guild.channels.fetch();
+
+    resGuild = {
+        id: guild.id,
+        name: guild.name,
+        icon: guild.iconURL(),
+        members,
+        channels,
+    };
+
+    res.json({
+        success: true,
+        guild: resGuild,
+    });
+});
+
 app.listen(process.env.API_PORT, () => {
     console.log(`API listening on ${process.env.API_PORT}`)
 })
