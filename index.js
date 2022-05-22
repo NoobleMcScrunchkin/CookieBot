@@ -5,9 +5,12 @@ const { Client, Intents } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const mysql = require('mysql');
 const util = require('util');
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 let intents = new Intents(Intents.NON_PRIVILEGED);
 intents.add('GUILDS');
 intents.add('GUILD_MEMBERS');
+intents.add('GUILD_MESSAGES');
 const client = new Client({ intents });
 const schedule = require('node-schedule');
 const express = require('express');
@@ -152,6 +155,24 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+client.on('messageCreate', async (message) => {
+    toSend = [];
+    for (let key in socketClients) {
+        data = socketClients[key];
+        if (data.guild == message.guild.id && data.channel == message.channel.id) {
+            toSend.push(key);
+        }
+    }
+
+    for (let i = 0; i < toSend.length; i++) {
+        let socket = io.sockets.sockets.get(toSend[i]);
+        socket.emit('newMessage', {
+            message: message,
+            member: await message.guild.members.fetch(message.author.id)
+        });
+    }
+});
+
 client.login(process.env.TOKEN);
 
 const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'disable'];
@@ -254,6 +275,61 @@ app.get('/guilds', async (req, res) => {
     });
 });
 
+app.get('/messages', async (req, res) => {
+    if (!req.query.guildid || !req.query.channelid) {
+        res.json({
+            success: false
+        });
+        return;
+    }
+
+    let guild = client.guilds.cache.find(guild => {
+        return req.query.guildid == guild.id
+    });
+
+    if (!guild) {
+        res.json({
+            success: false
+        });
+        return;
+    }
+
+    let channel = await guild.channels.fetch(req.query.channelid);
+
+    if (!channel) {
+        res.json({
+            success: false
+        });
+        return;
+    }
+
+    let messages = await channel.messages.fetch({ limit: 25 });
+
+    let members = {};
+
+    for (let [index, message] of messages) {
+        if (members[message.author.id] != undefined) {
+            continue;
+        }
+        members[message.author.id] = await message.guild.members.fetch(message.author.id);
+    }
+
+    let resMessages = [];
+
+    for (let [index, message] of messages) {
+        resMessages.push({
+            message: message,
+            member: members[message.author.id]
+        });
+    }
+
+
+    res.json({
+        success: true,
+        messages: resMessages,
+    });
+});
+
 app.get('/guild', async (req, res) => {
     if (!req.query.guildid) {
         res.json({
@@ -292,4 +368,30 @@ app.get('/guild', async (req, res) => {
 
 app.listen(process.env.API_PORT, () => {
     console.log(`API listening on ${process.env.API_PORT}`)
-})
+});
+
+const httpServer = createServer();
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.ORIGIN_URL,
+        methods: ["GET", "POST"]
+    }
+});
+
+let socketClients = [];
+
+io.on("connection", (socket) => {
+
+    socket.on('setChannel', data => {
+        socketClients[socket.id] = {
+            guild: data.guild,
+            channel: data.channel,
+        };
+    });
+
+    socket.on("disconnect", (reason) => {
+        delete socketClients[socket.id];
+    });
+});
+
+httpServer.listen(process.env.WS_PORT);
