@@ -5,13 +5,15 @@ const { Client, Intents } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const mysql = require('mysql');
 const util = require('util');
-const { createServer } = require("http");
+const https = require("https");
+const http = require("http");
 const { Server } = require("socket.io");
 let intents = new Intents(Intents.NON_PRIVILEGED);
 intents.add('GUILDS');
 intents.add('GUILD_MEMBERS');
 intents.add('GUILD_MESSAGES');
 const client = new Client({ intents });
+const fs = require('fs');
 const schedule = require('node-schedule');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -370,8 +372,17 @@ app.listen(process.env.API_PORT, () => {
     console.log(`API listening on ${process.env.API_PORT}`)
 });
 
-const httpServer = createServer();
-const io = new Server(httpServer, {
+var webServer;
+
+if (process.env.SSL == 'true') {
+    webServer = https.createServer({
+        key: fs.readFileSync(process.env.SSL_KEY),
+        cert: fs.readFileSync('process.env.SSL_CERT')
+    });
+} else {
+    webServer = http.createServer();
+}
+const io = new Server(webServer, {
     cors: {
         origin: process.env.ORIGIN_URL,
         methods: ["GET", "POST"]
@@ -394,4 +405,4 @@ io.on("connection", (socket) => {
     });
 });
 
-httpServer.listen(process.env.WS_PORT);
+webServer.listen(process.env.WS_PORT);
