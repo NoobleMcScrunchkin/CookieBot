@@ -377,7 +377,7 @@ var webServer;
 if (process.env.SSL == 'true') {
     webServer = https.createServer({
         key: fs.readFileSync(process.env.SSL_KEY),
-        cert: fs.readFileSync('process.env.SSL_CERT')
+        cert: fs.readFileSync(process.env.SSL_CERT)
     });
 } else {
     webServer = http.createServer();
