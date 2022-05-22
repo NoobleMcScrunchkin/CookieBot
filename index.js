@@ -227,11 +227,12 @@ app.post('/eval', async (req, res) => {
 });
 
 app.post('/send-msg', async (req, res) => {
-    if (req.body.message == undefined || req.body.guild == undefined || req.body.channel == undefined) {
+    if (req.body.message == undefined || req.body.guild == undefined || req.body.channel == undefined || req.body.userid == undefined) {
         res.json({
             success: false,
             output: 'Invalid request',
         });
+        return;
     }
 
     let guild = await client.guilds.fetch(req.body.guild);
@@ -240,6 +241,23 @@ app.post('/send-msg', async (req, res) => {
             success: false,
             output: 'Guild not found',
         });
+        return;
+    }
+
+    try {
+        if (!(await guild.members.fetch(req.body.userid)).permissions.has("ADMINISTRATOR")) {
+            res.json({
+                success: false,
+                output: 'Invalid request',
+            });
+            return;
+        }
+    } catch (e) {
+        res.json({
+            success: false,
+            output: 'Invalid request',
+        });
+        return;
     }
 
     let channel = await guild.channels.fetch(req.body.channel);
@@ -256,10 +274,24 @@ app.post('/send-msg', async (req, res) => {
 });
 
 app.get('/guilds', async (req, res) => {
+    if (!req.query.userid) {
+        res.json({
+            success: false
+        });
+        return;
+    }
+
     let guilds = client.guilds.cache;
     let guildsArray = [];
 
     for (let [index, guild] of guilds) {
+        try {
+            if (!(await guild.members.fetch(req.query.userid)).permissions.has("ADMINISTRATOR")) {
+                continue;
+            }
+        } catch (e) {
+            continue;
+        }
         let members = await guild.members.fetch();
         let channels = await guild.channels.fetch();
         guildsArray.push({
@@ -278,7 +310,7 @@ app.get('/guilds', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    if (!req.query.guildid || !req.query.channelid) {
+    if (!req.query.guildid || !req.query.channelid || !req.query.userid) {
         res.json({
             success: false
         });
@@ -293,6 +325,18 @@ app.get('/messages', async (req, res) => {
         res.json({
             success: false
         });
+        return;
+    }
+
+    try {
+        if (!(await guild.members.fetch(req.query.userid)).permissions.has("ADMINISTRATOR")) {
+            res.json({
+                success: false,
+                output: 'Invalid request',
+            });
+            return;
+        }
+    } catch (e) {
         return;
     }
 
@@ -333,7 +377,7 @@ app.get('/messages', async (req, res) => {
 });
 
 app.get('/guild', async (req, res) => {
-    if (!req.query.guildid) {
+    if (!req.query.guildid || !req.query.userid) {
         res.json({
             success: false
         });
@@ -348,6 +392,18 @@ app.get('/guild', async (req, res) => {
         res.json({
             success: false
         });
+        return;
+    }
+
+    try {
+        if (!(await guild.members.fetch(req.query.userid)).permissions.has("ADMINISTRATOR")) {
+            res.json({
+                success: false,
+                output: 'Invalid request',
+            });
+            return;
+        }
+    } catch (e) {
         return;
     }
 
