@@ -12,6 +12,8 @@ var job = new CronJob('00 00 12 * * 0-6', async function () {
         if (row.channel == null) return;
 
         let guild = await client.guilds.fetch(row.guild_id);
+        if (guild == null) return;
+        
         let channel = await guild.channels.fetch(row.channel);
         if (channel == null) return;
 
