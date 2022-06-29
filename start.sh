@@ -1,0 +1,1 @@
+forever start --minUptime 1 --spinSleepTime 100 -c "nodemon --exitcrash" index.js
