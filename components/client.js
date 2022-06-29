@@ -80,6 +80,19 @@ client.on('ready', async () => {
         if (res.length == 0) {
             await query(`insert into schedule (guild_id, day) values (${guild.id}, "Wednesday")`);
         }
+        res = await query(`select * from currentpings where guild_id = ${guild.id}`);
+        if (res.length == 0) {
+            await query(`insert into currentpings (guild_id, channel, message) values (${guild.id}, "000000000000000000", "000000000000000000")`);
+        }
+    });
+
+    res = await query(`select * from currentpings where message != "000000000000000000" && channel != "000000000000000000"`);
+    res.forEach(async row => {
+        let guild = await client.guilds.fetch(row.guild_id);
+        if (guild == null) return;
+        let channel = guild.channels.cache.get(row.channel);
+        if (channel == null) return;
+        let message = await channel.messages.fetch(row.message);
     });
 });
 

@@ -16,6 +16,7 @@ const query = util.promisify(connection.query).bind(connection);
 (async () => {
     await query(`create table if not exists messages ( id int auto_increment primary key, message longtext null, guild_id text not null, reactions longtext null ) collate = utf8mb4_bin;`);
     await query(`create table if not exists schedule ( id int auto_increment primary key, guild_id text not null, day text null, channel  text null );`);
+    await query(`create table if not exists currentpings ( id int auto_increment primary key, guild_id text not null, channel text not null, message text not null);`);
 })();
 
 module.exports = {query, connection};
