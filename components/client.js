@@ -130,6 +130,7 @@ client.on('interactionCreate', async interaction => {
                 await channel.send('Failed to react with ' + emoji);
             }
         });
+        await query(`UPDATE currentpings SET channel = '${channel.id}', message = '${message.id}' WHERE guild_id = '${interaction.guild.id}';`);
     } else if (interaction.commandName === 'setmessage') {
         await query(`UPDATE messages SET message = ${connection.escape(interaction.options.getString('message'))} WHERE guild_id = '${interaction.guild.id}';`);
         await interaction.reply('Message set.');

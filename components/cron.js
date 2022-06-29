@@ -29,6 +29,7 @@ var job = new CronJob('00 00 12 * * 0-6', async function () {
                 channel.send('Failed to react with ' + emoji);
             }
         });
+        await query(`UPDATE currentpings SET channel = '${channel.id}', message = '${message.id}' WHERE guild_id = '${guild.id}';`);
     });
 }, function () {}, true, 'Europe/London');
 
