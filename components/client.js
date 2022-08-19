@@ -33,6 +33,10 @@ const commands = [
         .addStringOption(option =>
             option.setName('reactions')
                 .setDescription('The reactions for ping (comma separated)')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('roles')
+                .setDescription('The roles to assign to each reaction (comma separated)')
                 .setRequired(true)),
     new SlashCommandBuilder()
         .setName('setday')
@@ -74,7 +78,7 @@ client.on('ready', async () => {
     guilds.forEach(async guild => {
         let res = await query(`select * from messages where guild_id = ${guild.id}`);
         if (res.length == 0) {
-            await query(`insert into messages (message, guild_id, reactions) values ("This is the default ping message, please set the message using the /setmessage command", ${guild.id}, "[]")`);
+            await query(`insert into messages (message, guild_id, reactions, roles) values ("This is the default ping message, please set the message using the /setmessage command", ${guild.id}, "[]", "[]")`);
         }
         res = await query(`select * from schedule where guild_id = ${guild.id}`);
         if (res.length == 0) {
@@ -111,6 +115,8 @@ client.on("guildCreate", async guild => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
+    let guild = interaction.guild;
+
     let owner = await interaction.guild.fetchOwner()
     if (interaction.member.id != owner.id && interaction.member.id != 157958436657692672) {
         // await interaction.reply({ content: 'Only the server owner can run commands.', fetchReply: true })
@@ -123,6 +129,7 @@ client.on('interactionCreate', async interaction => {
         let channel = await interaction.guild.channels.fetch(res2[0].channel);
         let message = await channel.send({ content: res[0].message, fetchReply: true });
         let emojis = JSON.parse(res[0].reactions);
+        
         emojis.forEach(async emoji => {
             try {
                 await message.react(emoji);
@@ -130,12 +137,31 @@ client.on('interactionCreate', async interaction => {
                 await channel.send('Failed to react with ' + emoji);
             }
         });
+
+        let recRoles = JSON.parse(res[0].roles);
+        recRoles.forEach(async (role) => {
+            let discordRole = await guild.roles.fetch(role);
+            if (discordRole != null) {
+                discordRole.members.forEach((roleMember) => {
+                    roleMember.roles.remove(discordRole);
+                });
+            }
+        });
+    
         await query(`UPDATE currentpings SET channel = '${channel.id}', message = '${message.id}' WHERE guild_id = '${interaction.guild.id}';`);
     } else if (interaction.commandName === 'setmessage') {
         await query(`UPDATE messages SET message = ${connection.escape(interaction.options.getString('message'))} WHERE guild_id = '${interaction.guild.id}';`);
         await interaction.reply('Message set.');
     } else if (interaction.commandName === 'setreactions') {
-        await query(`UPDATE messages SET reactions = ${connection.escape(JSON.stringify(interaction.options.getString('reactions').replace(/\s+/g, '').split(',')))} WHERE guild_id = '${interaction.guild.id}';`);
+        let reactions = interaction.options.getString('reactions').replace(/\s+/g, '').split(',');
+        let roles = [];
+
+        interaction.options.getString('roles').replace(/\s+/g, '').split(',').forEach(role => {
+            roles.push(role.replace(/\D/g, ""));
+        });
+
+        await query(`UPDATE messages SET roles = ${connection.escape(JSON.stringify(roles))}, reactions = ${connection.escape(JSON.stringify(reactions))} WHERE guild_id = '${interaction.guild.id}';`);
+
         await interaction.reply('Reactions set.');
     } else if (interaction.commandName === 'setday') {
         let day = interaction.options.getString('day').toLowerCase();
@@ -167,14 +193,40 @@ client.on('messageCreate', async (message) => {
             member: await message.guild.members.fetch(message.author.id)
         });
     }
+
+    if (message.cleanContent.toLowerCase() == 'owo') {
+        await message.channel.send('UwU');
+    }
 });
 
 client.on('messageReactionAdd', async (messageReaction, user) => {
     reactions = await messageReaction.message.reactions;
     reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
+    let guild = await client.guilds.fetch(messageReaction.message.guildId);
 
     if (user.bot) return;
     if (messageReaction.message.author.id != client.user.id) return;
+
+    let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
+    if (!res) return;
+
+    let recReactions = JSON.parse(res[0].reactions);
+    let recRoles = JSON.parse(res[0].roles);
+    let role = null;
+
+    recReactions.forEach((react, index) => {
+        if (react == reaction._emoji.name) {
+            role = recRoles[index];
+        }
+    });
+
+    if (role != null) {
+        let discordRole = await guild.roles.fetch(role);
+        if (discordRole != null) {
+            let member = guild.members.cache.get(user.id);
+            await member.roles.add(discordRole);
+        }
+    }
 
     if (reaction.count > 2) {
         await messageReaction.users.remove(client.user.id);
@@ -184,9 +236,31 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
 client.on('messageReactionRemove', async (messageReaction, user) => {
     reactions = await messageReaction.message.reactions;
     reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
+    let guild = await client.guilds.fetch(messageReaction.message.guildId);
 
     if (user.bot) return;
     if (messageReaction.message.author.id != client.user.id) return;
+
+    let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
+    if (!res) return;
+
+    let recReactions = JSON.parse(res[0].reactions);
+    let recRoles = JSON.parse(res[0].roles);
+    let role = null;
+
+    recReactions.forEach((react, index) => {
+        if (react == reaction._emoji.name) {
+            role = recRoles[index];
+        }
+    });
+
+    if (role != null) {
+        let discordRole = await guild.roles.fetch(role);
+        if (discordRole != null) {
+            let member = guild.members.cache.get(user.id);
+            await member.roles.remove(discordRole);
+        }
+    }
 
     if (reaction.count == 1) {
         await messageReaction.message.react(messageReaction._emoji);

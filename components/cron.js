@@ -29,6 +29,17 @@ var job = new CronJob('00 00 12 * * 0-6', async function () {
                 channel.send('Failed to react with ' + emoji);
             }
         });
+
+        let recRoles = JSON.parse(res[0].roles);
+        recRoles.forEach(async (role) => {
+            let discordRole = await guild.roles.fetch(role);
+            if (discordRole != null) {
+                discordRole.members.forEach((roleMember) => {
+                    roleMember.roles.remove(discordRole);
+                });
+            }
+        });
+        
         await query(`UPDATE currentpings SET channel = '${channel.id}', message = '${message.id}' WHERE guild_id = '${guild.id}';`);
     });
 }, function () {}, true, 'Europe/London');
