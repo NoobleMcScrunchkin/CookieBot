@@ -129,7 +129,7 @@ client.on('interactionCreate', async interaction => {
         let channel = await interaction.guild.channels.fetch(res2[0].channel);
         let message = await channel.send({ content: res[0].message, fetchReply: true });
         let emojis = JSON.parse(res[0].reactions);
-        
+
         emojis.forEach(async emoji => {
             try {
                 await message.react(emoji);
@@ -220,7 +220,7 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
         }
     });
 
-    if (role != null) {
+    if (role != null && role != '') {
         let discordRole = await guild.roles.fetch(role);
         if (discordRole != null) {
             let member = guild.members.cache.get(user.id);
@@ -254,7 +254,7 @@ client.on('messageReactionRemove', async (messageReaction, user) => {
         }
     });
 
-    if (role != null) {
+    if (role != null && role != '') {
         let discordRole = await guild.roles.fetch(role);
         if (discordRole != null) {
             let member = guild.members.cache.get(user.id);
