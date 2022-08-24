@@ -140,11 +140,17 @@ client.on('interactionCreate', async interaction => {
 
         let recRoles = JSON.parse(res[0].roles);
         recRoles.forEach(async (role) => {
-            let discordRole = await guild.roles.fetch(role);
-            if (discordRole != null) {
-                discordRole.members.forEach((roleMember) => {
-                    roleMember.roles.remove(discordRole);
-                });
+            try {
+                let discordRole = await guild.roles.fetch(role);
+                if (discordRole != null) {
+                    if (discordRole.members && discordRole.members.length > 0) {
+                        discordRole.members.forEach((roleMember) => {
+                            roleMember.roles.remove(discordRole);
+                        });
+                    }
+                }
+            } catch(e) {
+                console.error(e.message);
             }
         });
     
