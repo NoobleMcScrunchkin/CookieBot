@@ -203,33 +203,37 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
     if (user.bot) return;
     if (messageReaction.message.author.id != client.user.id) return;
 
-    reactions = await messageReaction.message.reactions;
-    reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
-    let guild = await client.guilds.fetch(messageReaction.message.guildId);
+    try {
+        reactions = await messageReaction.message.reactions;
+        reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
+        let guild = await client.guilds.fetch(messageReaction.message.guildId);
 
-    let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
-    if (!res) return;
+        let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
+        if (!res) return;
 
-    let recReactions = JSON.parse(res[0].reactions);
-    let recRoles = JSON.parse(res[0].roles);
-    let role = null;
+        let recReactions = JSON.parse(res[0].reactions);
+        let recRoles = JSON.parse(res[0].roles);
+        let role = null;
 
-    recReactions.forEach((react, index) => {
-        if (react == reaction._emoji.name) {
-            role = recRoles[index];
+        recReactions.forEach((react, index) => {
+            if (react == reaction._emoji.name) {
+                role = recRoles[index];
+            }
+        });
+
+        if (role != null && role != '') {
+            let discordRole = await guild.roles.fetch(role);
+            if (discordRole != null) {
+                let member = guild.members.cache.get(user.id);
+                await member.roles.add(discordRole);
+            }
         }
-    });
 
-    if (role != null && role != '') {
-        let discordRole = await guild.roles.fetch(role);
-        if (discordRole != null) {
-            let member = guild.members.cache.get(user.id);
-            await member.roles.add(discordRole);
+        if (reaction.count > 2) {
+            await messageReaction.users.remove(client.user.id);
         }
-    }
-
-    if (reaction.count > 2) {
-        await messageReaction.users.remove(client.user.id);
+    } catch(e) {
+        console.error(e.message);
     }
 });
 
@@ -237,33 +241,37 @@ client.on('messageReactionRemove', async (messageReaction, user) => {
     if (user.bot) return;
     if (messageReaction.message.author.id != client.user.id) return;
 
-    reactions = await messageReaction.message.reactions;
-    reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
-    let guild = await client.guilds.fetch(messageReaction.message.guildId);
+    try {
+        reactions = await messageReaction.message.reactions;
+        reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
+        let guild = await client.guilds.fetch(messageReaction.message.guildId);
 
-    let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
-    if (!res) return;
+        let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
+        if (!res) return;
 
-    let recReactions = JSON.parse(res[0].reactions);
-    let recRoles = JSON.parse(res[0].roles);
-    let role = null;
+        let recReactions = JSON.parse(res[0].reactions);
+        let recRoles = JSON.parse(res[0].roles);
+        let role = null;
 
-    recReactions.forEach((react, index) => {
-        if (react == reaction._emoji.name) {
-            role = recRoles[index];
+        recReactions.forEach((react, index) => {
+            if (react == reaction._emoji.name) {
+                role = recRoles[index];
+            }
+        });
+
+        if (role != null && role != '') {
+            let discordRole = await guild.roles.fetch(role);
+            if (discordRole != null) {
+                let member = guild.members.cache.get(user.id);
+                await member.roles.remove(discordRole);
+            }
         }
-    });
 
-    if (role != null && role != '') {
-        let discordRole = await guild.roles.fetch(role);
-        if (discordRole != null) {
-            let member = guild.members.cache.get(user.id);
-            await member.roles.remove(discordRole);
+        if (reaction.count == 1) {
+            await messageReaction.message.react(messageReaction._emoji);
         }
-    }
-
-    if (reaction.count == 1) {
-        await messageReaction.message.react(messageReaction._emoji);
+    } catch(e) {
+        console.error(e.message);
     }
 });
 
