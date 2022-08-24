@@ -200,12 +200,12 @@ client.on('messageCreate', async (message) => {
 });
 
 client.on('messageReactionAdd', async (messageReaction, user) => {
+    if (user.bot) return;
+    if (messageReaction.message.author.id != client.user.id) return;
+
     reactions = await messageReaction.message.reactions;
     reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
     let guild = await client.guilds.fetch(messageReaction.message.guildId);
-
-    if (user.bot) return;
-    if (messageReaction.message.author.id != client.user.id) return;
 
     let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
     if (!res) return;
@@ -234,12 +234,12 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
 });
 
 client.on('messageReactionRemove', async (messageReaction, user) => {
+    if (user.bot) return;
+    if (messageReaction.message.author.id != client.user.id) return;
+
     reactions = await messageReaction.message.reactions;
     reaction = await reactions.cache.get(messageReaction._emoji.name).fetch();
     let guild = await client.guilds.fetch(messageReaction.message.guildId);
-
-    if (user.bot) return;
-    if (messageReaction.message.author.id != client.user.id) return;
 
     let res = await query(`select * from messages where guild_id = ${messageReaction.message.guildId}`);
     if (!res) return;
