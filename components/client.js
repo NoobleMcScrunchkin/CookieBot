@@ -76,6 +76,7 @@ client.on('ready', async () => {
     let guilds = client.guilds.cache;
 
     guilds.forEach(async guild => {
+        guild.members.fetch();
         let res = await query(`select * from messages where guild_id = ${guild.id}`);
         if (res.length == 0) {
             await query(`insert into messages (message, guild_id, reactions, roles) values ("This is the default ping message, please set the message using the /setmessage command", ${guild.id}, "[]", "[]")`);
