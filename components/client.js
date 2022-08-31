@@ -143,7 +143,7 @@ client.on('interactionCreate', async interaction => {
             try {
                 let discordRole = await guild.roles.fetch(role);
                 if (discordRole != null) {
-                    if (discordRole.members && discordRole.members.length > 0) {
+                    if (discordRole.members) {
                         discordRole.members.forEach((roleMember) => {
                             roleMember.roles.remove(discordRole);
                         });

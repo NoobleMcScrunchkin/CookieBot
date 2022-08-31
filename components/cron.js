@@ -35,9 +35,9 @@ var job = new CronJob('00 00 12 * * 0-6', async function () {
             try {
                 let discordRole = await guild.roles.fetch(role);
                 if (discordRole != null) {
-                    if (discordRole.members && discordRole.members.length > 0) {
-                        discordRole.members.forEach((roleMember) => {
-                            roleMember.roles.remove(discordRole);
+                    if (discordRole.members) {
+                        discordRole.members.forEach(async (roleMember) => {
+                            await roleMember.roles.remove(discordRole);
                         });
                     }
                 }
