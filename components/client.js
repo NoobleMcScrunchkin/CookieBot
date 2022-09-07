@@ -130,6 +130,8 @@ client.on('interactionCreate', async interaction => {
         let channel = await interaction.guild.channels.fetch(res2[0].channel);
         let message = await channel.send({ content: res[0].message, fetchReply: true });
         let emojis = JSON.parse(res[0].reactions);
+        
+        await query(`UPDATE currentpings SET channel = '${channel.id}', message = '${message.id}' WHERE guild_id = '${interaction.guild.id}';`);
 
         emojis.forEach(async emoji => {
             try {
@@ -146,7 +148,11 @@ client.on('interactionCreate', async interaction => {
                 if (discordRole != null) {
                     if (discordRole.members) {
                         discordRole.members.forEach((roleMember) => {
-                            roleMember.roles.remove(discordRole);
+                            try {
+                                roleMember.roles.remove(discordRole);
+                            } catch (e) {
+                                console.error(e.message);
+                            }
                         });
                     }
                 }
@@ -155,7 +161,6 @@ client.on('interactionCreate', async interaction => {
             }
         });
     
-        await query(`UPDATE currentpings SET channel = '${channel.id}', message = '${message.id}' WHERE guild_id = '${interaction.guild.id}';`);
     } else if (interaction.commandName === 'setmessage') {
         await query(`UPDATE messages SET message = ${connection.escape(interaction.options.getString('message'))} WHERE guild_id = '${interaction.guild.id}';`);
         await interaction.reply('Message set.');
