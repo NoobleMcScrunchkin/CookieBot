@@ -23,6 +23,46 @@ app.post('/eval', async (req, res) => {
     }
 });
 
+app.post('/set-nickname', async (req, res) => {
+    if (req.body.guild == undefined || req.body.member == undefined || req.body.nickname == undefined) {
+        res.json({
+            success: false,
+            output: 'Invalid request',
+        });
+        return;
+    }
+
+    let guild = await client.guilds.fetch(req.body.guild);
+    if (guild == undefined) {
+        res.json({
+            success: false,
+            output: 'Guild not found',
+        });
+        return;
+    }
+
+    let member = await guild.members.fetch(req.body.member);
+    if (member == undefined) {
+        res.json({
+            success: false,
+            output: 'Member not found',
+        });
+        return;
+    }
+
+    try {
+        await member.setNickname(req.body.nickname);
+    } catch (e) {
+        res.json({
+            success: false,
+            output: e.message,
+        });
+        return;    
+    }
+
+    res.json({ success: true });
+});
+
 app.post('/send-msg', async (req, res) => {
     if (req.body.message == undefined || req.body.guild == undefined || req.body.channel == undefined || req.body.userid == undefined) {
         res.json({
