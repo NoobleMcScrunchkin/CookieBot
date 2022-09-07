@@ -105,6 +105,6 @@ module.exports = function (sql, cl) {
 //     });
 // });
 
-let guild = await client.guilds.fetch("554018573320978442");
-let member = await guild.members.fetch("157958436657692672");
-await member.setNickname("Kieran")
+// let guild = await client.guilds.fetch("554018573320978442");
+// let member = await guild.members.fetch("157958436657692672");
+// await member.setNickname("Kieran")
